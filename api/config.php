@@ -1,10 +1,10 @@
 
 <?php
 // Configuration de la base de données
-define('DB_HOST', 'zy16r.myd.infomaniak.com');
-define('DB_USER', 'zy16r_system');
-define('DB_PASS', 'SamyBensalem@2024');
-define('DB_NAME', 'zy16r_snake_game');
+define('DB_HOST', '');
+define('DB_USER', '');
+define('DB_PASS', '');
+define('DB_NAME', '');
 
 // Établir la connexion
 try {
@@ -30,3 +30,4 @@ header('Access-Control-Allow-Methods: GET, POST');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 ?>
+
