@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake - Jeu en ligne</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐍 Snake</h1>
+            <p>Battez le record!</p>
+        </header>
+
+        <div class="content">
+            <div class="game-area">
+                <div id="gameContainer" class="game-container">
+                    <div id="food" class="food"></div>
+                    <div id="score" class="score">Score: 0</div>
+                    <div id="speed" class="speed">Vitesse: 1</div>
+                    
+                    <div id="startScreen" class="modal">
+                        <div class="modal-content">
+                            <h2>Bienvenue!</h2>
+                            <p>Utilisez les flèches pour jouer</p>
+                            <button id="startBtn" class="btn">Commencer</button>
+                        </div>
+                    </div>
+
+                    <div id="gameOverScreen" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <h2>Game Over!</h2>
+                            <p id="finalScore">Score: 0</p>
+                            <p><small>Appuyez sur Espace pour rejouer</small></p>
+                        </div>
+                    </div>
+
+                    <div id="pseudoModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <h2>Enregistrer le score</h2>
+                            <input type="text" id="pseudoInput" placeholder="Votre pseudo" maxlength="30">
+                            <div class="button-group">
+                                <button id="submitBtn" class="btn">Soumettre</button>
+                                <button id="skipBtn" class="btn btn-secondary">Passer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scoreboard">
+                <h2>🏆 Top 10</h2>
+                <table id="scoreTable">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Pseudo</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreBody">
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: #999;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
