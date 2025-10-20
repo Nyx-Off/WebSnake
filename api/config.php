@@ -30,4 +30,3 @@ header('Access-Control-Allow-Methods: GET, POST');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 ?>
-

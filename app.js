@@ -23,6 +23,10 @@ let speed = 1;
 let gameActive = false;
 let gameLoop = null;
 
+// Session sécurisée
+let gameToken = null;
+let gameStartTime = null;
+
 const GRID_SIZE = 20;
 const BOARD_SIZE = 600;
 
@@ -32,13 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.addEventListener('click', submitScore);
     skipBtn.addEventListener('click', skipScore);
     
-    // Écouteur pour le pseudo (Entrée = soumettre)
     pseudoInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             submitScore();
             e.preventDefault();
         }
-        // On n'empêche rien pour Espace - on laisse juste taper
     });
     
     document.addEventListener('keydown', handleKeyPress);
@@ -49,19 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
 function handleKeyPress(e) {
     const key = e.key;
     
-    // Si le modal pseudo est visible, on ignore les touches (sauf Enter)
     if (pseudoModal.style.display === 'block') {
         return;
     }
     
-    // Espace pour rejouer après Game Over
     if (key === ' ' && gameOverScreen.style.display === 'block' && !gameActive) {
         resetGameAndStart();
         e.preventDefault();
         return;
     }
     
-    // Contrôles du serpent pendant le jeu
     if (!gameActive) return;
     
     if (key === 'ArrowUp' && direction !== 'down') {
@@ -79,8 +78,35 @@ function handleKeyPress(e) {
     }
 }
 
+// Créer une nouvelle session de jeu
+async function initializeGameSession() {
+    try {
+        const response = await fetch('api/secure.php?action=start', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            gameToken = data.token;
+            gameStartTime = data.timestamp;
+            return true;
+        } else {
+            alert('Erreur: impossible de démarrer une session');
+            return false;
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur de connexion');
+        return false;
+    }
+}
+
 // Démarrer le jeu
-function startGame() {
+async function startGame() {
+    const sessionOk = await initializeGameSession();
+    if (!sessionOk) return;
+    
     initializeGame();
     startScreen.style.display = 'none';
     gameLoop = setInterval(moveSnake, getGameSpeed());
@@ -88,11 +114,9 @@ function startGame() {
 
 // Initialiser l'état du jeu
 function initializeGame() {
-    // Nettoyer d'abord
     if (gameLoop) clearInterval(gameLoop);
     clearSnake();
     
-    // Réinitialiser l'état
     snake = [{ x: 0, y: 0 }];
     direction = 'right';
     nextDirection = 'right';
@@ -100,20 +124,19 @@ function initializeGame() {
     speed = 1;
     gameActive = true;
     
-    // Mettre à jour l'affichage
     updateDisplay();
-    
-    // Créer le serpent initial
     drawSnake();
-    
-    // Créer la nourriture
     spawnFood();
 }
 
-// Rejouer directement (sans écran de démarrage)
-function resetGameAndStart() {
+// Rejouer directement
+async function resetGameAndStart() {
     gameOverScreen.style.display = 'none';
     pseudoModal.style.display = 'none';
+    
+    const sessionOk = await initializeGameSession();
+    if (!sessionOk) return;
+    
     initializeGame();
     gameLoop = setInterval(moveSnake, getGameSpeed());
 }
@@ -164,7 +187,6 @@ function moveSnake() {
     direction = nextDirection;
     const head = { ...snake[0] };
     
-    // Calculer la nouvelle position de la tête
     switch (direction) {
         case 'up':
             head.y -= GRID_SIZE;
@@ -192,21 +214,17 @@ function moveSnake() {
         return;
     }
     
-    // Ajouter la nouvelle tête
     snake.unshift(head);
     
-    // Manger la nourriture
     if (head.x === foodPos.x && head.y === foodPos.y) {
         score++;
         updateDisplay();
         spawnFood();
         increaseSpeed();
     } else {
-        // Retirer la queue
         snake.pop();
     }
     
-    // Redessiner
     drawSnake();
 }
 
@@ -244,6 +262,7 @@ function resetGame() {
     clearSnake();
     if (gameLoop) clearInterval(gameLoop);
     gameActive = false;
+    gameToken = null;
 }
 
 // Mettre à jour l'affichage
@@ -257,15 +276,20 @@ async function submitScore() {
     const pseudo = pseudoInput.value.trim() || 'Anonyme';
     pseudoInput.value = '';
     
+    // Calculer la durée de la partie
+    const duration = Math.floor((Date.now() / 1000) - gameStartTime);
+    
     try {
-        const response = await fetch('api/save.php', {
+        const response = await fetch('api/secure.php?action=save', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                token: gameToken,
                 pseudo: pseudo,
-                score: score
+                score: score,
+                duration: duration
             })
         });
         
@@ -274,6 +298,10 @@ async function submitScore() {
         if (data.success) {
             pseudoModal.style.display = 'none';
             loadScoreboard();
+            // Retour écran d'accueil après 2 sec
+            setTimeout(() => {
+                resetGame();
+            }, 2000);
         } else {
             alert('Erreur: ' + data.error);
         }
